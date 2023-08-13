@@ -5,6 +5,7 @@ import br.com.fiap.api.LivroLume.entities.ClientePF;
 import br.com.fiap.api.LivroLume.entities.Livro;
 import br.com.fiap.api.LivroLume.enums.Plano;
 import br.com.fiap.api.LivroLume.services.ClientePFServices;
+import io.swagger.annotations.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/cliente/pf")
+@Api(tags = "ClientePF", description = "Operações relacionadas a clientes pessoa física")
 public class ClientePFController {
 
     private final ClientePFServices clientePFServices;
@@ -27,88 +29,165 @@ public class ClientePFController {
     }
 
     @GetMapping
+    @ApiOperation("Obter a lista de todos os clientes pessoa física")
+    @ApiResponse(code = 200, message = "Lista de clientes pessoa física obtida com sucesso")
     public ResponseEntity<List<ClientePF>> getAllClientes() {
         List<ClientePF> clientes = clientePFServices.findAll();
         return ResponseEntity.ok(clientes);
     }
 
     @GetMapping("/plano/greater/{plano}")
-    public ResponseEntity<List<ClientePF>> getClientesByPlanoGreaterThanOrEqual(@PathVariable Plano plano) {
+    @ApiOperation("Obter a lista de clientes pessoa física com plano maior ou igual ao fornecido")
+    @ApiResponse(code = 200, message = "Lista de clientes pessoa física obtida com sucesso")
+    public ResponseEntity<List<ClientePF>> getClientesByPlanoGreaterThanOrEqual(@ApiParam(value = "Plano mínimo desejado", required = true) @PathVariable Plano plano) {
         List<ClientePF> clientes = clientePFServices.findByPlanoisGreaterThanEqual(plano);
         return ResponseEntity.ok(clientes);
     }
 
     @GetMapping("/plano/less/{plano}")
-    public ResponseEntity<List<ClientePF>> getClientesByPlanoLessThanOrEqual(@PathVariable Plano plano) {
+    @ApiOperation("Obter a lista de clientes pessoa física com plano menor ou igual ao fornecido")
+    @ApiResponse(code = 200, message = "Lista de clientes pessoa física obtida com sucesso")
+    public ResponseEntity<List<ClientePF>> getClientesByPlanoLessThanOrEqual(@ApiParam(value = "Plano máximo desejado", required = true) @PathVariable Plano plano) {
         List<ClientePF> clientes = clientePFServices.findByPlanoLessThanEqual(plano);
         return ResponseEntity.ok(clientes);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ClientePF> getClienteById(@PathVariable long id) {
+    @ApiOperation("Obter informações de um cliente pessoa física por ID")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Cliente pessoa física encontrado com sucesso"),
+            @ApiResponse(code = 404, message = "Nao foi encontrado um cliente com esse id")
+    })
+    public ResponseEntity<ClientePF> getClienteById( @ApiParam(value = "ID do cliente pessoa física", required = true) @PathVariable long id) {
         ClientePF cliente = clientePFServices.findById(id);
         return ResponseEntity.ok(cliente);
     }
 
     @GetMapping("/name/{name}")
+    @ApiOperation("Obter informações de um cliente pessoa física por nome")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Cliente pessoa física encontrado com sucesso"),
+            @ApiResponse(code = 404, message = "Nao foi encontrado um cliente com esse nome")
+    })
     public ResponseEntity<ClientePF> getClienteByName(@PathVariable String name) {
         ClientePF cliente = clientePFServices.findByName(name);
         return ResponseEntity.ok(cliente);
     }
 
     @GetMapping("/cpf/{cpf}")
-    public ResponseEntity<ClientePF> getClienteByCPF(@PathVariable String cpf) {
+    @ApiOperation("Obter informações de um cliente pessoa física por CPF")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Cliente pessoa física encontrado com sucesso"),
+            @ApiResponse(code = 404, message = "Cliente pessoa física não encontrado")
+    })
+    public ResponseEntity<ClientePF> getClienteByCPF(
+            @ApiParam(value = "CPF do cliente pessoa física", required = true) @PathVariable String cpf) {
         ClientePF cliente = clientePFServices.findByCPF(cpf);
         return ResponseEntity.ok(cliente);
     }
 
     @GetMapping("/rg/{rg}")
-    public ResponseEntity<ClientePF> getClienteByRG(@PathVariable String rg) {
+    @ApiOperation("Obter informações de um cliente pessoa física por RG")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Cliente pessoa física encontrado com sucesso"),
+            @ApiResponse(code = 404, message = "Cliente pessoa física não encontrado")
+    })
+    public ResponseEntity<ClientePF> getClienteByRG(
+            @ApiParam(value = "RG do cliente pessoa física", required = true) @PathVariable String rg) {
         ClientePF cliente = clientePFServices.findByRG(rg);
         return ResponseEntity.ok(cliente);
     }
 
     @PostMapping
-    public ResponseEntity<ClientePF> registerCliente(@Valid @RequestBody ClientePF cliente) {
+    @ApiOperation("Registrar um novo cliente pessoa física")
+    @ApiResponses({
+            @ApiResponse(code = 201, message = "Cliente pessoa física registrado com sucesso"),
+            @ApiResponse(code = 400, message = "Requisição inválida")
+    })
+    public ResponseEntity<ClientePF> registerCliente(
+            @ApiParam(value = "Detalhes do cliente pessoa física", required = true) @Valid @RequestBody ClientePF cliente) {
         ClientePF registeredCliente = clientePFServices.register(cliente);
         return ResponseEntity.status(HttpStatus.CREATED).body(registeredCliente);
     }
 
     @Transactional
     @PutMapping("/update")
-    public ResponseEntity<ClientePF> updateCliente(@Valid @RequestBody UpdatePFDTO data) {
+    @ApiOperation("Atualizar os detalhes de um cliente pessoa física")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Cliente pessoa física atualizado com sucesso"),
+            @ApiResponse(code = 400, message = "Requisição inválida"),
+            @ApiResponse(code = 404, message = "Cliente pessoa física não encontrado")
+    })
+    public ResponseEntity<ClientePF> updateCliente(
+            @ApiParam(value = "Dados de atualização do cliente pessoa física", required = true) @Valid @RequestBody UpdatePFDTO data) {
         ClientePF updatedCliente = clientePFServices.update(data);
         return ResponseEntity.ok(updatedCliente);
     }
 
     @Transactional
     @PutMapping("/upgrade-plano/{id}")
-    public ResponseEntity<ClientePF> upgradeClientePlano(@PathVariable long id) {
+    @ApiOperation("Realizar o upgrade do plano de um cliente pessoa física")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Plano do cliente pessoa física atualizado com sucesso"),
+            @ApiResponse(code = 400, message = "Requisição inválida"),
+            @ApiResponse(code = 404, message = "Cliente pessoa física não encontrado")
+    })
+    public ResponseEntity<ClientePF> upgradeClientePlano(
+            @ApiParam(value = "ID do cliente pessoa física", required = true) @PathVariable long id) {
         ClientePF upgradedCliente = clientePFServices.upgradePlano(id);
         return ResponseEntity.ok(upgradedCliente);
     }
 
     @Transactional
     @PutMapping("/livros/add/{idLivro}")
-    public ResponseEntity<Set<Livro>> adicionarLivro (@PathVariable Long idLivro,@RequestBody Long idCliente){
+    @ApiOperation("Adicionar um livro à lista de livros de um cliente pessoa física")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Livro adicionado com sucesso"),
+            @ApiResponse(code = 400, message = "Requisição inválida"),
+            @ApiResponse(code = 404, message = "Cliente pessoa física ou livro não encontrado")
+    })
+    public ResponseEntity<Set<Livro>> adicionarLivro(
+            @ApiParam(value = "ID do livro a ser adicionado", required = true) @PathVariable Long idLivro,
+            @ApiParam(value = "ID do cliente pessoa física", required = true) @RequestBody Long idCliente) {
         return ResponseEntity.ok(clientePFServices.adicionar(idLivro,idCliente));
     }
 
     @Transactional
     @PutMapping("/livros/remove/{idLivro}")
-    public ResponseEntity<Set<Livro>> removerLivro (@PathVariable Long idLivro,@RequestBody Long idCliente){
+    @ApiOperation("Remover um livro da lista de livros de um cliente pessoa física")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Livro removido com sucesso"),
+            @ApiResponse(code = 400, message = "Requisição inválida"),
+            @ApiResponse(code = 404, message = "Cliente pessoa física ou livro não encontrado")
+    })
+    public ResponseEntity<Set<Livro>> removerLivro(
+            @ApiParam(value = "ID do livro a ser removido", required = true) @PathVariable Long idLivro,
+            @ApiParam(value = "ID do cliente pessoa física", required = true) @RequestBody Long idCliente) {
         return ResponseEntity.ok(clientePFServices.remover(idLivro,idCliente));
     }
 
     @Transactional
     @PutMapping("/downgrade-plano/{id}")
-    public ResponseEntity<ClientePF> downgradeClientePlano(@PathVariable long id) {
+    @ApiOperation("Realizar o downgrade do plano de um cliente pessoa física")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Plano do cliente pessoa física rebaixado com sucesso"),
+            @ApiResponse(code = 400, message = "Requisição inválida"),
+            @ApiResponse(code = 404, message = "Cliente pessoa física não encontrado")
+    })
+    public ResponseEntity<ClientePF> downgradeClientePlano(
+            @ApiParam(value = "ID do cliente pessoa física", required = true) @PathVariable long id) {
         ClientePF downgradedCliente = clientePFServices.downgradePlano(id);
         return ResponseEntity.ok(downgradedCliente);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteClienteById(@PathVariable long id) {
+    @ApiOperation("Excluir um cliente pessoa física por ID")
+    @ApiResponses({
+            @ApiResponse(code = 204, message = "Cliente pessoa física excluído com sucesso"),
+            @ApiResponse(code = 404, message = "Cliente pessoa física não encontrado")
+    })
+    public ResponseEntity<Void> deleteClienteById(
+            @ApiParam(value = "ID do cliente pessoa física a ser excluído", required = true) @PathVariable long id) {
         clientePFServices.deleteById(id);
         return ResponseEntity.noContent().build();
     }
